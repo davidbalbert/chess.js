@@ -91,6 +91,18 @@
     });
   }
 
+  function identity(x) {
+    return x;
+  }
+
+  function compact(a) {
+    return a.filter(identity);
+  }
+
+  function mapProp(a, prop) {
+    return a.map(function (o) { return o[prop]; });
+  }
+
   function parseBoardString(boardString) {
     var placements = boardString.split(" ").map(function (s) {
       if (s === "..") {
@@ -123,18 +135,6 @@
 
     this.squares = parseBoardString(boardString);
     console.log(this.squares);
-  }
-
-  function identity(x) {
-    return x;
-  }
-
-  function compact(a) {
-    return a.filter(identity);
-  }
-
-  function mapProp(a, prop) {
-    return a.map(function (o) { return o[prop]; });
   }
 
   Board.prototype = {
