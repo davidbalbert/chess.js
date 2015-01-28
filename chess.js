@@ -93,12 +93,12 @@
     return x;
   }
 
-  function mapProp(a, prop) {
-    return a.map(function (o) { return o[prop]; });
-  }
-
   function compact(a) {
     return a.filter(identity);
+  }
+
+  function mapProp(a, prop) {
+    return a.map(function (o) { return o[prop]; });
   }
 
   Board.prototype = {
