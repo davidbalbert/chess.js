@@ -1,7 +1,7 @@
 ;(function () {
   "use strict";
 
-  var boardPositions = "br bk bb bq bK bb bk br " +
+  var STANDARD_BOARD = "br bk bb bq bK bb bk br " +
                        "bp bp bp bp bp bp bp bp " +
                        ".. .. .. .. .. .. .. .. " +
                        ".. .. .. .. .. .. .. .. " +
@@ -14,7 +14,7 @@
     this.screen = canvas.getContext("2d");
     this.width  = canvas.width;
     this.height = canvas.height;
-    this.board  = new Board(canvas.width, canvas.height);
+    this.board  = new Board(STANDARD_BOARD, canvas.width, canvas.height);
   }
 
   Game.prototype = {
@@ -55,6 +55,16 @@
     return a;
   }
 
+  function range(size) {
+    var a = [];
+
+    for (var i = 0; i < size; i++) {
+      a.push(i);
+    }
+
+    return a;
+  }
+
   function crossProduct(a, b) {
     var product = [];
 
@@ -67,25 +77,51 @@
     return product;
   }
 
-  function createSquares() {
-    var ranks = stringRange("8", "1", -1);
-    var files = stringRange("a", "h", 1);
+  function assert(bool, message) {
+    if (!bool) {
+      throw message;
+    }
+  }
 
-    return crossProduct(ranks, files).map(function(pair) {
-      var rank = pair[0];
-      var file = pair[1];
-      var name = file + rank;
+  function zip(a, b) {
+    var length = Math.min(a.length, b.length);
 
-      //return new Square(rank, file, initialPositions[name])
-      return pair.reverse().join("");
+    return range(length).map(function (i) {
+      return [a[i], b[i]];
     });
   }
 
-  function Board(width, height) {
+  function parseBoardString(boardString) {
+    var placements = boardString.split(" ").map(function (s) {
+      if (s === "..") {
+        return null;
+      } else {
+        return Piece.fromString(s);
+      }
+    });
+
+    assert(placements.size === 64, "parseBoardString: boardString must have 64 squares");
+
+    var ranks = stringRange("8", "1", -1);
+    var files = stringRange("a", "h", 1);
+
+    var names = crossProduct(ranks, files).map(function (pair) {
+      return pair.reverse().join("");
+    });
+
+    return zip(names, placements).map(function(a) {
+      var name = a[0];
+      var piece = a[1];
+
+      return new Space(name, piece);
+    });
+  }
+
+  function Board(boardString, width, height) {
     this.width  = width;
     this.height = height;
 
-    this.squares = createSquares();
+    this.squares = parseBoardString(boardString);
     console.log(this.squares);
   }
 
