@@ -1,6 +1,15 @@
 ;(function () {
   "use strict";
 
+  var boardPositions = "br bk bb bq bK bb bk br " +
+                       "bp bp bp bp bp bp bp bp " +
+                       ".. .. .. .. .. .. .. .. " +
+                       ".. .. .. .. .. .. .. .. " +
+                       ".. .. .. .. .. .. .. .. " +
+                       ".. .. .. .. .. .. .. .. " +
+                       "wp wp wp wp wp wp wp wp " +
+                       "wr wk wb wq wK wb wk wr";
+
   function Game(canvas) {
     this.screen = canvas.getContext("2d");
     this.width  = canvas.width;
@@ -63,6 +72,11 @@
     var files = stringRange("a", "h", 1);
 
     return crossProduct(ranks, files).map(function(pair) {
+      var rank = pair[0];
+      var file = pair[1];
+      var name = file + rank;
+
+      //return new Square(rank, file, initialPositions[name])
       return pair.reverse().join("");
     });
   }
@@ -75,12 +89,28 @@
     console.log(this.squares);
   }
 
+  function identity(x) {
+    return x;
+  }
+
+  function mapProp(a, prop) {
+    return a.map(function (o) { return o[prop]; });
+  }
+
+  function compact(a) {
+    return a.filter(identity);
+  }
+
   Board.prototype = {
-    draw: function(screen) {
+    draw: function (screen) {
       for (var square of this.squares) {
         //square.draw(screen);
       }
     },
+
+    pieces: function () {
+      return compact(mapProp(this.squares, "piece"));
+    }
   };
 
   var game = new Game(document.getElementById("chess-canvas"));
