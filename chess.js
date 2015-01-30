@@ -93,29 +93,45 @@
     return a.map(function (o) { return o[prop]; });
   }
 
+  var piecePrototype = {
+    draw: function (screen, pos, side) {
+      screen.drawImage(IMAGES[this.imageName()], pos.x, pos.y, side, side);
+    },
+
+    imageName: function () {
+      return "images/" + this.color + "_" + this.constructor.name.toLowerCase() + ".png";
+    }
+  }
+
   function Pawn(color) {
     this.color = color;
   }
+  extend(Pawn.prototype, piecePrototype);
 
   function Rook(color) {
     this.color = color;
   }
+  extend(Rook.prototype, piecePrototype);
 
   function Knight(color) {
     this.color = color;
   }
+  extend(Knight.prototype, piecePrototype);
 
   function Bishop(color) {
     this.color = color;
   }
+  extend(Bishop.prototype, piecePrototype);
 
   function Queen(color) {
     this.color = color;
   }
+  extend(Queen.prototype, piecePrototype);
 
   function King(color) {
     this.color = color;
   }
+  extend(King.prototype, piecePrototype);
 
   var COLORS = {w: "white", b: "black"};
   var PIECES = {
@@ -152,7 +168,7 @@
       screen.fillRect(pos.x, pos.y, size, size);
 
       if (this.piece) {
-        //this.piece.draw(screen, pos, side);
+        this.piece.draw(screen, pos, size);
       }
     },
 
@@ -258,8 +274,48 @@
     "images/white_rook.png"
   ];
 
+  var IMAGES;
+
+  function object(arr) {
+    var o = {};
+
+    for (var pair of arr) {
+      o[pair[0]] = pair[1];
+    }
+
+    return o;
+  }
+
+  function extend(dest, src) {
+    for (var key of Object.keys(src)) {
+      dest[key] = src[key];
+    }
+
+    return dest;
+  }
+
+  function loadImages(names, cb) {
+    var completed = []
+
+    function checkComplete(e) {
+      completed.push(e.target.src);
+
+      if (completed.length === names.length) {
+        cb(images);
+      }
+    }
+
+    var images = object(names.map(function (name) {
+      var img = new Image();
+      img.addEventListener("load", checkComplete);
+      img.src = name;
+      return [name, img];
+    }));
+  }
+
   loadImages(IMAGE_NAMES, function (images) {
-    var game = new Game(document.getElementById("chess-canvas"), images);
+    IMAGES = images;
+    var game = new Game(document.getElementById("chess-canvas"));
     game.redraw();
   });
 })();
