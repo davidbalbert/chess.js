@@ -10,19 +10,22 @@
                        "wp wp wp wp wp wp wp wp " +
                        "wr wk wb wq wK wb wk wr";
 
-  function Game(canvas) {
-    this.screen = canvas.getContext("2d");
-    this.width  = canvas.width;
-    this.height = canvas.height;
-    this.board  = new Board(STANDARD_BOARD, canvas.width, canvas.height);
-  }
+  var IMAGE_NAMES = [
+    "images/black_bishop.png",
+    "images/black_king.png",
+    "images/black_knight.png",
+    "images/black_pawn.png",
+    "images/black_queen.png",
+    "images/black_rook.png",
+    "images/white_bishop.png",
+    "images/white_king.png",
+    "images/white_knight.png",
+    "images/white_pawn.png",
+    "images/white_queen.png",
+    "images/white_rook.png"
+  ];
 
-  Game.prototype = {
-    redraw: function () {
-      this.screen.clearRect(0, 0, this.width, this.height);
-      this.board.draw(this.screen);
-    }
-  };
+  var IMAGES;
 
   function stepChar(c, step) {
     return String.fromCharCode(c.charCodeAt(0) + step);
@@ -93,6 +96,38 @@
     return a.map(function (o) { return o[prop]; });
   }
 
+  function object(arr) {
+    var o = {};
+
+    for (var pair of arr) {
+      o[pair[0]] = pair[1];
+    }
+
+    return o;
+  }
+
+  function extend(dest, src) {
+    for (var key of Object.keys(src)) {
+      dest[key] = src[key];
+    }
+
+    return dest;
+  }
+
+  function Game(canvas) {
+    this.screen = canvas.getContext("2d");
+    this.width  = canvas.width;
+    this.height = canvas.height;
+    this.board  = new Board(STANDARD_BOARD, canvas.width, canvas.height);
+  }
+
+  extend(Game.prototype, {
+    redraw: function () {
+      this.screen.clearRect(0, 0, this.width, this.height);
+      this.board.draw(this.screen);
+    }
+  });
+
   var piecePrototype = {
     draw: function (screen, pos, side) {
       screen.drawImage(IMAGES[this.imageName()], pos.x, pos.y, side, side);
@@ -160,7 +195,7 @@
     this.piece = piece;
   }
 
-  Square.prototype = {
+  extend(Square.prototype, {
     draw: function (screen, size) {
       var pos = this.getPosition(size);
 
@@ -206,7 +241,7 @@
 
       return file.charCodeAt(0) - "a".charCodeAt(0);
     }
-  };
+  });
 
   function parseBoardString(boardString) {
     var placements = boardString.split(" ").map(function (s) {
@@ -243,7 +278,7 @@
     this.squares = parseBoardString(boardString);
   }
 
-  Board.prototype = {
+  extend(Board.prototype, {
     draw: function (screen) {
       for (var square of this.squares) {
         square.draw(screen, this.sideLength());
@@ -257,42 +292,7 @@
     pieces: function () {
       return compact(mapProp(this.squares, "piece"));
     }
-  };
-
-  var IMAGE_NAMES = [
-    "images/black_bishop.png",
-    "images/black_king.png",
-    "images/black_knight.png",
-    "images/black_pawn.png",
-    "images/black_queen.png",
-    "images/black_rook.png",
-    "images/white_bishop.png",
-    "images/white_king.png",
-    "images/white_knight.png",
-    "images/white_pawn.png",
-    "images/white_queen.png",
-    "images/white_rook.png"
-  ];
-
-  var IMAGES;
-
-  function object(arr) {
-    var o = {};
-
-    for (var pair of arr) {
-      o[pair[0]] = pair[1];
-    }
-
-    return o;
-  }
-
-  function extend(dest, src) {
-    for (var key of Object.keys(src)) {
-      dest[key] = src[key];
-    }
-
-    return dest;
-  }
+  });
 
   function loadImages(names, cb) {
     var completed = []
