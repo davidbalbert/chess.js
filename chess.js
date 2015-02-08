@@ -48,16 +48,6 @@
     return a;
   }
 
-  function range(size) {
-    var a = [];
-
-    for (var i = 0; i < size; i++) {
-      a.push(i);
-    }
-
-    return a;
-  }
-
   function crossProduct(a, b) {
     var product = [];
 
@@ -76,55 +66,39 @@
     }
   }
 
-  function zip(a, b) {
-    var length = Math.min(a.length, b.length);
-
-    return range(length).map(function (i) {
-      return [a[i], b[i]];
-    });
-  }
-
-  function identity(x) {
-    return x;
-  }
-
-  function compact(a) {
-    return a.filter(identity);
-  }
-
   function mapProp(a, prop) {
     return a.map(function (o) { return o[prop]; });
   }
 
-  function object(arr) {
-    var o = {};
-
-    for (var pair of arr) {
-      o[pair[0]] = pair[1];
-    }
-
-    return o;
-  }
-
-  function extend(dest, src) {
-    for (var key of Object.keys(src)) {
-      dest[key] = src[key];
-    }
-
-    return dest;
-  }
-
   function Game(canvas) {
+    this.canvas = canvas;
     this.screen = canvas.getContext("2d");
     this.width  = canvas.width;
     this.height = canvas.height;
     this.board  = new Board(STANDARD_BOARD, canvas.width, canvas.height);
   }
 
-  extend(Game.prototype, {
+  function highlightSquare(e) {
+    this.board.highlight({x: e.offsetX, y: e.offsetY});
+  }
+
+  function unhighlightSquare(e) {
+    this.board.unhighlight();
+  }
+
+  _.extend(Game.prototype, {
+    run: function () {
+      $(this.canvas).on("mousemove", highlightSquare.bind(this));
+      $(this.canvas).on("mouseleave", unhighlightSquare.bind(this));
+
+      requestAnimationFrame(this.redraw.bind(this));
+    },
+
     redraw: function () {
       this.screen.clearRect(0, 0, this.width, this.height);
       this.board.draw(this.screen);
+
+      requestAnimationFrame(this.redraw.bind(this));
     }
   });
 
@@ -141,32 +115,32 @@
   function Pawn(color) {
     this.color = color;
   }
-  extend(Pawn.prototype, piecePrototype);
+  _.extend(Pawn.prototype, piecePrototype);
 
   function Rook(color) {
     this.color = color;
   }
-  extend(Rook.prototype, piecePrototype);
+  _.extend(Rook.prototype, piecePrototype);
 
   function Knight(color) {
     this.color = color;
   }
-  extend(Knight.prototype, piecePrototype);
+  _.extend(Knight.prototype, piecePrototype);
 
   function Bishop(color) {
     this.color = color;
   }
-  extend(Bishop.prototype, piecePrototype);
+  _.extend(Bishop.prototype, piecePrototype);
 
   function Queen(color) {
     this.color = color;
   }
-  extend(Queen.prototype, piecePrototype);
+  _.extend(Queen.prototype, piecePrototype);
 
   function King(color) {
     this.color = color;
   }
-  extend(King.prototype, piecePrototype);
+  _.extend(King.prototype, piecePrototype);
 
   var COLORS = {w: "white", b: "black"};
   var PIECES = {
@@ -193,9 +167,10 @@
   function Square(name, piece) {
     this.name = name;
     this.piece = piece;
+    this.highlighted = false;
   }
 
-  extend(Square.prototype, {
+  _.extend(Square.prototype, {
     draw: function (screen, size) {
       var pos = this.getPosition(size);
 
@@ -204,6 +179,11 @@
 
       if (this.piece) {
         this.piece.draw(screen, pos, size);
+      }
+
+      if (this.highlighted) {
+        screen.fillStyle = "rgba(255,255,0,0.5)";
+        screen.fillRect(pos.x, pos.y, size, size);
       }
     },
 
@@ -240,6 +220,14 @@
       var file = this.name.split("")[0];
 
       return file.charCodeAt(0) - "a".charCodeAt(0);
+    },
+
+    highlight: function () {
+      this.highlighted = true;
+    },
+
+    unhighlight: function () {
+      this.highlighted = false;
     }
   });
 
@@ -261,7 +249,7 @@
       return pair.reverse().join("");
     });
 
-    return zip(names, placements).map(function(a) {
+    return _.zip(names, placements).map(function(a) {
       var name = a[0];
       var piece = a[1];
 
@@ -278,23 +266,45 @@
     this.squares = parseBoardString(boardString);
   }
 
-  extend(Board.prototype, {
+  _.extend(Board.prototype, {
     draw: function (screen) {
       for (var square of this.squares) {
-        square.draw(screen, this.sideLength());
+        square.draw(screen, this.squareSize());
       }
     },
 
-    sideLength: function () {
+    squareSize: function () {
       return this.side / 8;
     },
 
     pieces: function () {
-      return compact(mapProp(this.squares, "piece"));
+      return _.compact(mapProp(this.squares, "piece"));
+    },
+
+    highlight: function (point) {
+      this.unhighlight();
+
+      var square = this.pointToSquare(point);
+      square.highlight();
+    },
+
+    unhighlight: function () {
+      for (var square of this.squares) {
+        square.unhighlight();
+      }
+    },
+
+    pointToSquare: function(p) {
+      var col = Math.floor(p.x / this.squareSize());
+      var row = Math.floor(p.y / this.squareSize());
+
+      var index = row * 8 + col;
+
+      return this.squares[index];
     }
   });
 
-  function loadImages(names, cb) {
+  function withImages(names, cb) {
     var completed = []
 
     function checkComplete(e) {
@@ -305,7 +315,7 @@
       }
     }
 
-    var images = object(names.map(function (name) {
+    var images = _.object(names.map(function (name) {
       var img = new Image();
       img.addEventListener("load", checkComplete);
       img.src = name;
@@ -313,9 +323,9 @@
     }));
   }
 
-  loadImages(IMAGE_NAMES, function (images) {
+  withImages(IMAGE_NAMES, function (images) {
     IMAGES = images;
     var game = new Game(document.getElementById("chess-canvas"));
-    game.redraw();
+    game.run();
   });
 })();
