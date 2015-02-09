@@ -197,10 +197,6 @@
     },
 
     getColor: function () {
-      var parts   = this.name.split("");
-      var rank    = parseInt(parts[1]);
-      var fileNum = parts[0].charCodeAt(0) - "a".charCodeAt(0) + 1; // a => 1, b => 2, etc.
-
       if (this.row() % 2 === this.col() % 2) {
         return "#ffffe0";
       } else {
